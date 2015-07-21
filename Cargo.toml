@@ -2,3 +2,6 @@
 name = "impact"
 version = "0.1.0"
 authors = ["Takafumi Hirata <takhirata6@gmail.com>"]
+
+[dependencies]
+regex = "0.1.8"
