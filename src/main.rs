@@ -98,10 +98,48 @@ fn main() {
         let (amt, _) = res.unwrap();
 
         let response = buf.iter().take(amt);
+        let mut idx = 0;
+        let mut res_ident = Vec::new();
+        let mut res_flag = Vec::new();
+        let mut res_q_num = Vec::new();
+        let mut res_a_num = Vec::new();
+        let mut res_authorize_pr = Vec::new();
+        let mut res_additional_pr = Vec::new();
         for b in response {
-            print!("{:0>2x} ", b);
+            match idx {
+                0  | 1  => { res_ident.push(b) },
+                2  | 3  => { res_flag.push(b) },
+                4  | 5  => { res_q_num.push(b) },
+                6  | 7  => { res_a_num.push(b) },
+                8  | 9  => { res_authorize_pr.push(b) },
+                10 | 11 => { res_additional_pr.push(b) },
+                _ => {}
+            }
+            idx += 1;
         }
-        println!("");
+        println!("res_ident {:?}", res_ident);
+        println!("res_flag {:?}", res_flag);
+        let qr_flag = res_flag[0] >> 7;
+        let op_code = (res_flag[0] << 1) >> 3;
+        let aa = res_flag[0] & (1 << 2) == (1 << 2);
+        let tc = res_flag[0] & (1 << 1) == (1 << 1);
+        let rd = res_flag[0] & (1 << 0) == (1 << 0);
+        let ra = res_flag[1] & (1 << 7) == (1 << 7);
+        let reserved = (res_flag[1] << 1) >> 5;
+        let response_code = res_flag[1] & 0b1111;
+        println!("  qr_flag {:?}", qr_flag);
+        println!("  op_code {:?}", op_code);
+        println!("  aa {:?}", aa);
+        println!("  tc {:?}", tc);
+        println!("  rd {:?}", rd);
+        println!("  ra {:?}", ra);
+        println!("  reserved {:?}", reserved);
+        println!("  response_code {:?}", response_code);
+        println!("res_q_num {}", res_q_num[1]);
+        println!("res_a_num {}", res_a_num[1]);
+        println!("res_authorize_pr {}", res_authorize_pr[1]);
+        println!("res_additional_pr {}", res_additional_pr[1]);
+
         break;
     }
 
