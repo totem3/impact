@@ -97,48 +97,115 @@ fn main() {
         let res = socket.recv_from(&mut buf);
         let (amt, _) = res.unwrap();
 
-        let response = buf.iter().take(amt);
-        let mut idx = 0;
-        let mut res_ident = Vec::new();
-        let mut res_flag = Vec::new();
-        let mut res_q_num = Vec::new();
-        let mut res_a_num = Vec::new();
-        let mut res_authorize_pr = Vec::new();
-        let mut res_additional_pr = Vec::new();
-        for b in response {
-            match idx {
-                0  | 1  => { res_ident.push(b) },
-                2  | 3  => { res_flag.push(b) },
-                4  | 5  => { res_q_num.push(b) },
-                6  | 7  => { res_a_num.push(b) },
-                8  | 9  => { res_authorize_pr.push(b) },
-                10 | 11 => { res_additional_pr.push(b) },
-                _ => {}
+        let mut response = buf.iter().take(amt);
+
+        let res_ident : u32 = ((*(response.next().expect("Parse Error")) as u32) << 8) +
+                              (*(response.next().expect("Parse Error")) as u32);
+        let res_flag1 = response.next().expect("Parse Error");
+        let qr = match res_flag1 & (1 << 7) {
+            0 => "Question",
+            _ => "Answer",
+        };
+        let opcode = match (res_flag1 & (0b01111000)) >> 3 {
+            0 => "Standard Query",
+            1 => "Inverse Query",
+            2 => "Server Status Request",
+            n => panic!("Unknown code: {}", n),
+        };
+        let aa = match res_flag1 & 0b00000100 {
+            0 => false,
+            _ => true,
+        };
+        let tc = match res_flag1 & 0b00000010 {
+            0 => false,
+            _ => true,
+        };
+        let rd = match res_flag1 & 0b00000001 {
+            0 => false,
+            _ => true,
+        };
+
+        let res_flag0 = response.next().expect("Parse Error");
+        let ra = match res_flag0 & 0b10000000 {
+            0 => false,
+            _ => true,
+        };
+        let response_code = match res_flag0 & 0b00001111 {
+            0 => "No Error",
+            1 => "Format Error",
+            2 => "Server Error",
+            3 => "Name Error",
+            4 => "Unimplemented",
+            5 => "Request Denied",
+            _ => panic!("Unknown Response Code"),
+        };
+
+        println!("Ident: {}", res_ident);
+        println!("QR: {}", qr);
+        println!("OPCODE: {}", opcode);
+        println!("Authorative Answer: {}", aa);
+        println!("Trancation: {}", tc);
+        println!("Recursion Desired: {}", rd);
+        println!("Recursion Available: {}", ra);
+        println!("Response Code: {}", response_code);
+
+        let res_question_num : u32 = ((*(response.next().expect("Parse Error")) as u32) << 8) +
+                                     (*(response.next().expect("Parse Error")) as u32);
+        let res_answer_pr_num : u32 = ((*(response.next().expect("Parse Error")) as u32) << 8) +
+                                      (*(response.next().expect("Parse Error")) as u32);
+        let res_authorative_pr_num : u32 = ((*(response.next().expect("Parse Error")) as u32) << 8) +
+                                           (*(response.next().expect("Parse Error")) as u32);
+        let res_additional_pr_num : u32 = ((*(response.next().expect("Parse Error")) as u32) << 8) +
+                                          (*(response.next().expect("Parse Error")) as u32);
+        println!("Question Num {}", res_question_num);
+        println!("Answer PR Num {}", res_answer_pr_num);
+        println!("Authorative PR Num {}", res_authorative_pr_num);
+        println!("Additional PR Num {}", res_additional_pr_num);
+
+        // Question Section
+
+        let mut res_names = Vec::new();
+        loop {
+            let label = response.next();
+            match label {
+                Some(v) if *v > 0 => {},
+                _ => break,
             }
-            idx += 1;
+            let len = label.unwrap();
+
+            let mut vec = Vec::new();
+            let res = response.clone();
+            for s in res.take(*len as usize) {
+                vec.push(*s);
+            }
+            let value : String = String::from_utf8(vec).unwrap();
+            res_names.push(value);
+            res_names.push(String::from("."));
+
+            // skip
+            for _ in 0..*len {
+                response.next();
+            }
         }
-        println!("res_ident {:?}", res_ident);
-        println!("res_flag {:?}", res_flag);
-        let qr_flag = res_flag[0] >> 7;
-        let op_code = (res_flag[0] << 1) >> 3;
-        let aa = res_flag[0] & (1 << 2) == (1 << 2);
-        let tc = res_flag[0] & (1 << 1) == (1 << 1);
-        let rd = res_flag[0] & (1 << 0) == (1 << 0);
-        let ra = res_flag[1] & (1 << 7) == (1 << 7);
-        let reserved = (res_flag[1] << 1) >> 5;
-        let response_code = res_flag[1] & 0b1111;
-        println!("  qr_flag {:?}", qr_flag);
-        println!("  op_code {:?}", op_code);
-        println!("  aa {:?}", aa);
-        println!("  tc {:?}", tc);
-        println!("  rd {:?}", rd);
-        println!("  ra {:?}", ra);
-        println!("  reserved {:?}", reserved);
-        println!("  response_code {:?}", response_code);
-        println!("res_q_num {}", res_q_num[1]);
-        println!("res_a_num {}", res_a_num[1]);
-        println!("res_authorize_pr {}", res_authorize_pr[1]);
-        println!("res_additional_pr {}", res_additional_pr[1]);
+        for n in res_names {
+            print!("{}", n);
+        }
+
+        let res_question_type = match ((*(response.next().expect("Parse Error")) as u32) << 8) + (*(response.next().expect("Parse Error")) as u32) {
+            1 => "A",
+            2 => "NS",
+            5 => "CNAME",
+            12 => "PTR",
+            15 => "MX",
+            28 => "AAAA",
+            255 => "ANY",
+            n => panic!("Unknown Question Type: {}", n),
+        };
+        let res_question_class = match ((*(response.next().expect("Parse Error")) as u32) << 8) + (*(response.next().expect("Parse Error")) as u32) {
+            1 => "IN",
+            n => panic!("Unknown Question Class: {}", n),
+        };
+        print!("	{}	{}", res_question_class, res_question_type);
 
         break;
     }
