@@ -6,6 +6,54 @@ use std::io::Read;
 use regex::Regex;
 use std::env;
 use std::process::exit;
+use std::fmt;
+use std::fmt::{Formatter};
+use std::convert::From;
+
+enum RecordType {
+    A     = 1,
+    NS    = 2,
+    CNAME = 5,
+    SOA   = 6,
+    WKS   = 11,
+    PTR   = 12,
+    MX    = 15,
+    SRV   = 33,
+    AAAA  = 38,
+}
+
+impl From<u16> for RecordType {
+    fn from(n: u16) -> Self {
+        match n {
+            1  => RecordType::A,
+            2  => RecordType::NS,
+            5  => RecordType::CNAME,
+            6  => RecordType::SOA,
+            11 => RecordType::WKS,
+            12 => RecordType::PTR,
+            15 => RecordType::MX,
+            33 => RecordType::SRV,
+            38 => RecordType::AAAA,
+            _  => RecordType::A,
+        }
+    }
+}
+
+impl fmt::Display for RecordType {
+    fn fmt(&self, fmt: &mut Formatter) -> std::fmt::Result {
+        fmt.write_str(match *self {
+            RecordType::A => "A",
+            RecordType::NS => "NS",
+            RecordType::CNAME => "CNAME",
+            RecordType::SOA => "SOA",
+            RecordType::WKS => "WKS",
+            RecordType::PTR => "PTR",
+            RecordType::MX => "MX",
+            RecordType::SRV => "SRV",
+            RecordType::AAAA => "AAAA",
+        })
+    }
+}
 
 fn parse_resolv_conf() -> Vec<String> {
     let mut file = match File::open("/etc/resolv.conf") {
@@ -98,6 +146,7 @@ fn main() {
         let (amt, _) = res.unwrap();
 
         let mut response = buf.iter().take(amt);
+        let original_response = response.clone();
 
         let res_ident : u32 = ((*(response.next().expect("Parse Error")) as u32) << 8) +
                               (*(response.next().expect("Parse Error")) as u32);
@@ -187,6 +236,9 @@ fn main() {
                 response.next();
             }
         }
+
+        println!("");
+        println!("QUESTION");
         for n in res_names {
             print!("{}", n);
         }
@@ -206,8 +258,73 @@ fn main() {
             n => panic!("Unknown Question Class: {}", n),
         };
         print!("	{}	{}", res_question_class, res_question_type);
+        println!("");
 
+        // answer
+        println!("");
+        println!("ANSWER");
+        for _ in 0 .. res_answer_pr_num {
+            let field = response.next().expect("Parse Error");
+            let mut name: Vec<u8> = Vec::new();
+            if field & 0b11000000 == 0b11000000 {
+                let pointer: u32 = (((field & 0b00111111) as u32) << 8) + *(response.next().expect("Parse Error")) as u32;
+                let orig = original_response.clone();
+                let mut cnt = 0;
+                for s in orig.skip(pointer as usize) {
+                    if cnt == 0 {
+                        if *s == 0 {
+                            break;
+                        } else {
+                            cnt = *s;
+                        }
+                    } else {
+                        name.push(*s);
+                        cnt = cnt - 1;
+                        if cnt == 0 {
+                            name.push(46);
+                        }
+                    }
+                }
+            } else {
+            }
+
+            // println!("name {}", String::from_utf8(name).unwrap());
+
+            let record_type = RecordType::from(((*(response.next().expect("Parse Error")) as u16) << 8) + (*(response.next().expect("Parse Error")) as u16));
+            // println!("RecordType {}", record_type);
+
+            let record_class = ((*(response.next().expect("Parse Error")) as u16) << 8) + (*(response.next().expect("Parse Error")) as u16);
+            if record_class != 1 {
+                panic!("Unknown Record Class");
+            }
+
+
+            let ttl = ((*(response.next().expect("Parse Error")) as u32) << 24) +
+                      ((*(response.next().expect("Parse Error")) as u32) << 16) +
+                      ((*(response.next().expect("Parse Error")) as u32) <<  8) +
+                      ((*(response.next().expect("Parse Error")) as u32) <<  0);
+            // println!("TTL {}", ttl);
+
+            let rdata_length = ((*(response.next().expect("Parse Error")) as u16) << 8) + (*(response.next().expect("Parse Error")) as u16);
+            // println!("Length {}", rdata_length);
+
+            let rdata = match record_type {
+                RecordType::A => {
+                    ((*(response.next().expect("Parse Error")) as u32) << 24) +
+                    ((*(response.next().expect("Parse Error")) as u32) << 16) +
+                    ((*(response.next().expect("Parse Error")) as u32) <<  8) +
+                    ((*(response.next().expect("Parse Error")) as u32) <<  0)
+                },
+                _ => {
+                    5
+                }
+            };
+            let addr = Ipv4Addr::from(rdata);
+            let name = String::from_utf8(name).unwrap();
+            println!("{}	{}	IN	{}	{}", name, ttl, record_type, addr);
+        }
         break;
     }
+
 
 }
