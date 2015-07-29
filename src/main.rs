@@ -1,5 +1,8 @@
 #![feature(convert)]
 extern crate regex;
+mod resource;
+use resource::Record;
+use resource::ResourceRecord;
 use std::net::{SocketAddrV4, UdpSocket, Ipv4Addr};
 use std::fs::File;
 use std::io::Read;
@@ -77,6 +80,22 @@ fn usage() {
 }
 
 fn main() {
+
+    let v: Record<Ipv4Addr> = Record::<Ipv4Addr>::newARecord(
+        String::from("10.10.0.101"),
+        resource::RecordClass::IN,
+        Ipv4Addr::new(10,10,0,101)
+    );
+
+    let v2 = Record::<String>::newCNAMERecord(
+        String::from("10.10.0.101"),
+        resource::RecordClass::IN,
+        String::from("hogehoge.jp")
+    );
+
+    println!("v  = {}", v);
+    println!("v2 = {}", v2);
+    exit(0);
 
     let args: Vec<String> = env::args().collect();
     if args.len() < 2 {
