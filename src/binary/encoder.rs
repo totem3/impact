@@ -20,38 +20,46 @@ pub fn encode<T: Encodable>(object: &T) -> EncodeResult<Vec<u8>> {
 pub type EncodeResult<T> = Result<T, String>;
 
 impl<'a> Encoder<'a> {
-    fn new(buffer: &'a mut Vec<u8>) -> Encoder<'a> {
+    pub fn new(buffer: &'a mut Vec<u8>) -> Encoder<'a> {
         Encoder{
             buffer: buffer,
         }
     }
-    fn emit_u8(&mut self, v: u8) -> EncodeResult<()> {
+    pub fn emit_u8(&mut self, v: u8) -> EncodeResult<()> {
         self.buffer.push(v);
         Ok(())
     }
-    fn emit_u16(&mut self, v: u16) -> EncodeResult<()> {
+    pub fn emit_u16(&mut self, v: u16) -> EncodeResult<()> {
         self.buffer.push((v >> 8) as u8);
         self.buffer.push((v & 0b11111111) as u8);
         Ok(())
     }
-    fn emit_u32(&mut self, v: u32) -> EncodeResult<()> {
+    pub fn emit_u32(&mut self, v: u32) -> EncodeResult<()> {
         self.buffer.push((v >> 24) as u8);
         self.buffer.push((v >> 16) as u8);
         self.buffer.push((v >>  8) as u8);
         self.buffer.push((v & 0b11111111) as u8);
         Ok(())
     }
-    fn emit_str(&mut self, v: &str) -> EncodeResult<()> {
+    pub fn emit_str(&mut self, v: &str) -> EncodeResult<()> {
         let s = String::from(v);
         self.buffer.extend(s.as_bytes());
         Ok(())
     }
-    fn emit_string(&mut self, v: String) -> EncodeResult<()> {
+    pub fn emit_string(&mut self, v: String) -> EncodeResult<()> {
         self.buffer.extend(v.as_bytes());
+        Ok(())
+    }
+
+    pub fn emit_vec<T: Encodable>(&mut self, vs: &Vec<T>) -> EncodeResult<()> {
+        for v in vs {
+            v.encode(self);
+        }
         Ok(())
     }
 }
 
+#[cfg(test)]
 mod test {
     use super::{Encoder, EncodeResult, Encodable};
     struct Person {

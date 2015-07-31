@@ -43,14 +43,14 @@ fn usage() {
 }
 
 fn main() {
-    let query = Query {
+   let query = Query {
       identity: 0,
       flag: QueryFlag{
           query_or_response: QR::Query,
           operation: Operation::StandardQuery,
           authorative: false,
           truncation: false,
-          recursion_disired: true,
+          recursion_desired: true,
           recursion_available: false,
           response_code: ResponseCode::NoError,
       },

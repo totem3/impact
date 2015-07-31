@@ -7,7 +7,7 @@ struct Resolver {
 }
 
 impl Resolver {
-    pub fn resolve(&self, domain_name: Query) -> Result<Answer, &'static str> {
+    pub fn resolve<T>(&self, domain_name: Query) -> Result<Answer<T>, &'static str> {
         Err("hogehoge")
     }
 }

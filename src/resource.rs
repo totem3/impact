@@ -63,21 +63,21 @@ impl<T: Display> ResourceRecord for Record<T> {
     }
 }
 
-#[derive(Debug)]
+#[derive(Clone, Debug)]
 pub enum RecordType {
-    A,
-    NS,
-    CNAME,
-    SOA,
-    WKS,
-    PTR,
-    MX,
-    SRV,
-    AAAA,
+    A     = 1,
+    NS    = 2,
+    CNAME = 5,
+    SOA   = 6,
+    WKS   = 11,
+    PTR   = 12,
+    MX    = 15,
+    SRV   = 33,
+    AAAA  = 38,
 }
 
 
-#[derive(Debug)]
+#[derive(Clone, Debug)]
 pub enum RecordClass {
-    IN,
+    IN = 1,
 }
