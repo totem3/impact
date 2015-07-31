@@ -1,8 +1,12 @@
 #![feature(convert)]
 extern crate regex;
 mod base;
-mod resource;
+mod answer;
+mod name_server;
 mod query;
+mod resolver;
+mod resource;
+mod binary;
 use resource::{Record, ResourceRecord, RecordType, RecordClass};
 use query::{Query, QueryFlag, QR, Operation, ResponseCode, QuestionRecord};
 
@@ -36,12 +40,6 @@ fn parse_resolv_conf() -> Vec<String> {
 
 fn usage() {
     println!("usage: impact [name]");
-}
-
-fn as_u8(n: u16) -> [u8; 2] {
-    let msb = (n >> 8) as u8;
-    let lsb = ((n & 0b11111111) as u8);
-    [msb, lsb]
 }
 
 fn main() {

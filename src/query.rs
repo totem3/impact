@@ -43,14 +43,6 @@ pub enum QR {
     Query    = 0,
     Response = 1,
 }
-// impl Clone for QR {
-//     fn clone(&self) -> Self {
-//         match *self {
-//             QR::Query => QR::Query,
-//             QR::Response => QR::Response,
-//         }
-//     }
-// }
 
 #[derive(Clone,Debug)]
 pub enum Operation {
@@ -58,6 +50,7 @@ pub enum Operation {
     InverseQuery        = 1,
     ServerStatusRequest = 2,
 }
+#[derive(Clone,Debug)]
 pub enum ResponseCode {
     NoError             = 0,
     FormatError         = 1,
