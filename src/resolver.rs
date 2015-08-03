@@ -1,7 +1,7 @@
-use message::Message;
-use answer::Answer;
-use name_server::NameServer;
+// use message::Message;
+// use answer::Answer;
+// use name_server::NameServer;
 
-struct Resolver {
-    name_servers: Vec<NameServer>
-}
+// struct Resolver {
+//     name_servers: Vec<NameServer>
+// }

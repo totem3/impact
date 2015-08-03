@@ -7,8 +7,8 @@ mod message;
 mod resolver;
 mod resource;
 mod binary;
-use resource::{Record, ResourceRecord, RecordType, RecordClass};
-use message::{Message, Flag, QR, Operation, ResponseCode, QuestionRecord};
+// use resource::{Record, ResourceRecord, RecordType, RecordClass};
+// use message::{Message, Flag, QR, Operation, ResponseCode, QuestionRecord};
 
 
 use std::net::{SocketAddrV4, UdpSocket, Ipv4Addr};
@@ -43,27 +43,27 @@ fn usage() {
 }
 
 fn main() {
-   let query = Message {
-      identity: 0,
-      flag: Flag{
-          query_or_response: QR::Query,
-          operation: Operation::StandardQuery,
-          authorative: false,
-          truncation: false,
-          recursion_desired: true,
-          recursion_available: false,
-          response_code: ResponseCode::NoError,
-      },
-      question_count: 1,
-      answer_pr_count: 0,
-      authorative_pr_count: 0,
-      additional_pr_count: 0,
-      question_record: vec![QuestionRecord{
-          domain_name: "google.com",
-          query_type: RecordType::A,
-          query_class: RecordClass::IN,
-      }],
-    };
+   // let query = Message {
+   //    identity: 0,
+   //    flag: Flag{
+   //        query_or_response: QR::Query,
+   //        operation: Operation::StandardQuery,
+   //        authorative: false,
+   //        truncation: false,
+   //        recursion_desired: true,
+   //        recursion_available: false,
+   //        response_code: ResponseCode::NoError,
+   //    },
+   //    question_count: 1,
+   //    answer_pr_count: 0,
+   //    authorative_pr_count: 0,
+   //    additional_pr_count: 0,
+   //    question_record: vec![QuestionRecord{
+   //        domain_name: "google.com",
+   //        query_type: RecordType::A,
+   //        query_class: RecordClass::IN,
+   //    }],
+   //  };
 }
 
 // fn main2() {
