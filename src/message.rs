@@ -1,23 +1,26 @@
-use resource::{RecordType, RecordClass};
+use resource::{Record, ResourceRecord, RecordType, RecordClass};
 use binary::encoder::{Encoder, EncodeResult, Encodable};
 
-pub struct Query {
+pub struct Message {
     pub identity: u16,
-    pub flag: QueryFlag,
+    pub flag: Flag,
     pub question_count: u16,
     pub answer_pr_count: u16,
     pub authorative_pr_count: u16,
     pub additional_pr_count: u16,
     pub question_record: Vec<QuestionRecord>,
+    pub answer_record: Vec<Record>,
+    pub authorative_record: Vec<Record>,
+    pub additional_record: Vec<Record>,
 }
 
-impl Query {
+impl Message {
     pub fn new(id: u16,
                operation: Operation,
                recursive: bool,
                names: Vec<&'static str>,
-               query_type: RecordType) -> Query {
-        let flag = QueryFlag{
+               query_type: RecordType) -> Message {
+        let flag = Flag{
             query_or_response: QR::Query,
             operation: operation,
             authorative: false,
@@ -36,7 +39,7 @@ impl Query {
             };
             records.push(record);
         }
-        Query{
+        Message{
             identity: id,
             flag: flag,
             question_count: names_count,
@@ -48,7 +51,7 @@ impl Query {
     }
 }
 
-impl Encodable for Query {
+impl Encodable for Message {
     fn encode(&self, encoder: &mut Encoder) -> EncodeResult<()> {
         try!(encoder.emit_u16(self.identity));
         try!(self.flag.encode(encoder));
@@ -60,7 +63,7 @@ impl Encodable for Query {
     }
 }
 
-pub struct QueryFlag {
+pub struct Flag {
     pub query_or_response: QR,
     pub operation: Operation,
     pub authorative: bool,
@@ -70,7 +73,7 @@ pub struct QueryFlag {
     pub response_code: ResponseCode,
 }
 
-impl Encodable for QueryFlag {
+impl Encodable for Flag {
     fn encode(&self, encoder: &mut Encoder) -> EncodeResult<()> {
         let mut msb = 0u8;
         let qr = (self.query_or_response.clone() as u8) << 7;
@@ -138,14 +141,14 @@ impl Encodable for QuestionRecord {
 
 #[cfg(test)]
 mod test {
-    use super::{Query, QueryFlag, QR, Operation, ResponseCode, QuestionRecord};
+    use super::{Message, Flag, QR, Operation, ResponseCode, QuestionRecord};
     use binary::encoder;
     use binary::encoder::{Encoder, Encodable};
     use resource::{Record, ResourceRecord, RecordType, RecordClass};
 
     #[test]
     fn test_query_encode() {
-        let query = Query::new(
+        let query = Message::new(
             0,
             Operation::StandardQuery,
             true,

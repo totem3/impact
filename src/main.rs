@@ -3,12 +3,12 @@ extern crate regex;
 mod base;
 mod answer;
 mod name_server;
-mod query;
+mod message;
 mod resolver;
 mod resource;
 mod binary;
 use resource::{Record, ResourceRecord, RecordType, RecordClass};
-use query::{Query, QueryFlag, QR, Operation, ResponseCode, QuestionRecord};
+use message::{Message, Flag, QR, Operation, ResponseCode, QuestionRecord};
 
 
 use std::net::{SocketAddrV4, UdpSocket, Ipv4Addr};
@@ -43,9 +43,9 @@ fn usage() {
 }
 
 fn main() {
-   let query = Query {
+   let query = Message {
       identity: 0,
-      flag: QueryFlag{
+      flag: Flag{
           query_or_response: QR::Query,
           operation: Operation::StandardQuery,
           authorative: false,

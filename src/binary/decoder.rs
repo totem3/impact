@@ -20,18 +20,18 @@ impl<'a> Decoder<'a> {
         let u = self.iter.next();
         match u {
             Some(&v) => { println!("{:08b}", v); Ok(v)},
-            None => Err(String::from("End of input")),
+            None     => Err(String::from("End of input")),
         }
     }
     pub fn read_u16(&mut self) -> DecodeResult<u16> {
         let mut res = 0u16;
         match self.iter.next() {
             Some(&v) => { println!("{:08b}", v);res = res | ((v as u16) << 8) },
-            None => { return Err(String::from("End of input")) },
+            None     => { return Err(String::from("End of input")) },
         }
         match self.iter.next() {
             Some(&v) => { println!("{:08b}", v);res = res | (v as u16) },
-            None => { return Err(String::from("End of input")) },
+            None     => { return Err(String::from("End of input")) },
         }
         Ok(res)
     }
@@ -39,19 +39,19 @@ impl<'a> Decoder<'a> {
         let mut res = 0u32;
         match self.iter.next() {
             Some(&v) => { println!("{:08b}", v); res = res | ((v as u32) << 24) },
-            None => { return Err(String::from("End of input")) },
+            None     => { return Err(String::from("End of input")) },
         }
         match self.iter.next() {
             Some(&v) => { println!("{:08b}", v); res = res | ((v as u32) << 16) },
-            None => { return Err(String::from("End of input")) },
+            None     => { return Err(String::from("End of input")) },
         }
         match self.iter.next() {
             Some(&v) => { println!("{:08b}", v); res = res | ((v as u32) << 8) },
-            None => { return Err(String::from("End of input")) },
+            None     => { return Err(String::from("End of input")) },
         }
         match self.iter.next() {
             Some(&v) => { println!("{:08b}", v); res = res | (v as u32) },
-            None => { return Err(String::from("End of input")) },
+            None     => { return Err(String::from("End of input")) },
         }
         Ok(res)
     }
@@ -61,7 +61,7 @@ impl<'a> Decoder<'a> {
             match self.iter.next() {
                 Some(&v) => match char::from_u32(v as u32) { 
                     Some(vv) => { s.push(char::from(vv)) },
-                    None => { return Err(String::from(format!("Conversion Error. {} to char", v))) },
+                    None     => { return Err(String::from(format!("Conversion Error. {} to char", v))) },
                 },
                 None => { return Err(String::from("End of input")) },
             }
