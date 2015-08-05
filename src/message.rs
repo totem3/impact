@@ -1,4 +1,4 @@
-use resource::{Resource, ResourceType, ResourceClass, RData};
+use resource::{Resource, ResourceType, ResourceClass, RData, SOAData};
 use binary::encoder::{Encoder, EncodeResult, Encodable};
 use std::char;
 use std::net::{Ipv4Addr, Ipv6Addr};
@@ -204,6 +204,25 @@ impl Message {
                     Message::read_u16(&mut idx, data),
                 ))
             },
+            ResourceType::SOA => {
+                let mut idx = idx;
+                let ns = match Message::read_name(&mut idx, data) {
+                    Ok(v) => v,
+                    Err(e) => return Err(e),
+                };
+                let mb = match Message::read_name(&mut idx, data) {
+                    Ok(v) => v,
+                    Err(e) => return Err(e),
+                };
+                RData::SOA(SOAData::new(
+                    ns, mb,
+                    Message::read_u32(&mut idx, data),
+                    Message::read_u32(&mut idx, data),
+                    Message::read_u32(&mut idx, data),
+                    Message::read_u32(&mut idx, data),
+                    Message::read_u32(&mut idx, data)
+                ))
+            },
             ty => panic!(format!("not supprted type {:?}", ty)),
         };
         let resource = Resource {
@@ -268,6 +287,7 @@ impl<'a> Message {
         let answer_count = Message::read_u16(&mut idx, data);
         let authorative_count = Message::read_u16(&mut idx, data);
         let additional_count = Message::read_u16(&mut idx, data);
+
         let mut question_records = Vec::new();
         for _ in 0..question_count {
             let question_record = Message::read_question_record(&mut idx, data);
