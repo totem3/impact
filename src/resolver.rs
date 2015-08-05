@@ -32,7 +32,7 @@ impl Resolver {
 
         let mut nameservers = Vec::new();
         for cap in re.captures_iter(content.as_str()) {
-            let s = String::from(cap.at(1).unwrap_or("")).to_owned();
+            let s = cap.at(1).unwrap_or("").to_string().to_owned();
             match Ipv4Addr::from_str(&s) {
                 Ok(ip) => nameservers.push(ip),
                 _ => {},
@@ -79,10 +79,10 @@ impl Resolver {
             let response: &[u8] = &buf[0..len];
             return match Message::decode(response) {
                 Ok(v) => Ok(v),
-                Err(DecodeError::InvalidFormatErr(s)) => Err(String::from(s)),
+                Err(DecodeError::InvalidFormatErr(s)) => Err(s.to_string()),
             }
         }
-        Err(String::from("hogehoge"))
+        Err("Failed to resolve".to_string())
     }
 }
 
@@ -105,7 +105,7 @@ mod tests {
             ttl: 600,
             rdata: RData::A(Ipv4Addr::new(127, 0, 0, 1)),
         };
-        match resolver.resolve(String::from("localhost"), ResourceType::A) {
+        match resolver.resolve("localhost".to_string(), ResourceType::A) {
             Ok(message) => {
                 assert_eq!(*message.answer_record.index(0), expected);
             },
