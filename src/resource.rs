@@ -54,12 +54,35 @@ impl Display for SOAData {
 }
 
 #[derive(Debug,PartialEq)]
+pub struct MXData {
+    pub preference: u16,
+    pub mx: String,
+}
+
+impl MXData {
+    pub fn new(pref: u16, mx: String) -> MXData {
+        MXData {
+            preference: pref,
+            mx: mx,
+        }
+    }
+}
+
+impl Display for MXData {
+    fn fmt(&self, fmt: &mut Formatter) -> fmt::Result {
+        fmt.write_fmt(format_args!("{} {}", self.preference, self.mx))
+    }
+}
+
+#[derive(Debug,PartialEq)]
 pub enum RData {
     A(Ipv4Addr),
     NS(String),
     CNAME(String),
     AAAA(Ipv6Addr),
     SOA(SOAData),
+    MX(MXData),
+    PTR(String),
 }
 
 impl Display for RData {
@@ -70,6 +93,8 @@ impl Display for RData {
             RData::CNAME(ref cname) => fmt.write_fmt(format_args!("{}", cname)),
             RData::AAAA(ipv6) => fmt.write_fmt(format_args!("{}", ipv6)),
             RData::SOA(ref soa) => fmt.write_fmt(format_args!("{}", soa)),
+            RData::MX(ref mx) => fmt.write_fmt(format_args!("{}", mx)),
+            RData::PTR(ref ptr) => fmt.write_fmt(format_args!("{}", ptr)),
         }
     }
 }

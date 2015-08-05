@@ -1,4 +1,4 @@
-use resource::{Resource, ResourceType, ResourceClass, RData, SOAData};
+use resource::{Resource, ResourceType, ResourceClass, RData, SOAData, MXData};
 use binary::encoder::{Encoder, EncodeResult, Encodable};
 use std::char;
 use std::net::{Ipv4Addr, Ipv6Addr};
@@ -94,8 +94,9 @@ impl Message {
         }
     }
     fn read_label(idx: &mut usize, data: &[u8]) -> Result<String, DecodeError> {
+        let mut idx = idx;
         let mut split = Vec::new();
-        while data[*idx] != 0 {
+        while (data[*idx] != 0)  && (data[*idx] & 0xc0 != 0xc0) {
             let len = data[*idx];
             *idx = *idx + 1;
             let mut part = String::new();
@@ -108,7 +109,15 @@ impl Message {
             }
             split.push(part);
         }
-        *idx = *idx + 1;
+        if data[*idx] & 0xc0 == 0xc0 {
+            let part = match Message::read_name(&mut idx, data) {
+                Ok(v) => v,
+                Err(e) => return Err(e),
+            };
+            split.push(part)
+        } else {
+            *idx = *idx + 1;
+        }
         let name = split.join(&".");
         Ok(name)
     }
@@ -128,7 +137,7 @@ impl Message {
             15 => ResourceType::MX,
             33 => ResourceType::SRV,
             38 => ResourceType::AAAA,
-            _  =>  return Err(DecodeError::InvalidFormatErr("Unknown or Not Supported Resource Type")),
+            _  => return Err(DecodeError::InvalidFormatErr("Unknown or Not Supported Resource Type")),
         };
         let record_class = match Message::read_u16(&mut idx, data) {
             1 => ResourceClass::IN,
@@ -172,23 +181,10 @@ impl Message {
             },
             ResourceType::CNAME => {
                 let mut idx = idx;
-                let name = if data[*idx] & 0xc0 == 0xc0 {
-                        let msb = ((data[*idx] & 0x3f) as u16) << 8;
-                        *idx = *idx + 1;
-                        let lsb = data[*idx] as u16;
-                        let mut pointer: usize = (msb | lsb) as usize;
-                        let res = match Message::read_label(&mut pointer, data) {
-                            Ok(v) => v,
-                            Err(e) => return Err(e),
-                        };
-                        *idx = *idx + 1;
-                        res
-                    } else {
-                        match Message::read_label(&mut idx, data) {
-                            Ok(v) => v,
-                            Err(e) => return Err(e),
-                        }
-                    };
+                let name = match Message::read_name(&mut idx, data) {
+                    Ok(v) => v,
+                    Err(e) => return Err(e),
+                };
                 RData::CNAME(name)
             },
             ResourceType::AAAA => {
@@ -223,7 +219,35 @@ impl Message {
                     Message::read_u32(&mut idx, data)
                 ))
             },
-            ty => panic!(format!("not supprted type {:?}", ty)),
+            ResourceType::PTR => {
+                let mut idx = idx;
+                let name = match Message::read_name(&mut idx, data) {
+                    Ok(v) => v,
+                    Err(e) => return Err(e),
+                };
+                RData::PTR(name)
+            },
+            ResourceType::NS => {
+                let mut idx = idx;
+                let name = match Message::read_name(&mut idx, data) {
+                    Ok(v) => v,
+                    Err(e) => return Err(e),
+                };
+                RData::NS(name)
+            },
+            ResourceType::MX => {
+                let mut idx = idx;
+                let preference = Message::read_u16(&mut idx, data);
+                let name = match Message::read_name(&mut idx, data) {
+                    Ok(v) => v,
+                    Err(e) => return Err(e),
+                };
+                RData::MX(MXData::new(
+                    preference,
+                    name
+                ))
+            }
+            ty => panic!(format!("not supported type {:?}", ty)),
         };
         let resource = Resource {
             name: name,
