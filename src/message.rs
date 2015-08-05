@@ -79,6 +79,20 @@ impl Message {
         *idx = *idx + 1;
         a | b | c | d
     }
+    fn read_name(idx: &mut usize, data: &[u8]) -> Result<String, DecodeError> {
+        if data[*idx] & 0xc0 == 0xc0 {
+            let msb = ((data[*idx] & 0x3f) as u16) << 8;
+            *idx = *idx + 1;
+            let lsb = data[*idx] as u16;
+            let mut pointer: usize = (msb | lsb) as usize;
+            let res = Message::read_name(&mut pointer, data);
+            *idx = *idx + 1;
+            res
+        } else {
+            let mut idx = idx;
+            Message::read_label(&mut idx, data)
+        }
+    }
     fn read_label(idx: &mut usize, data: &[u8]) -> Result<String, DecodeError> {
         let mut split = Vec::new();
         while data[*idx] != 0 {
@@ -100,9 +114,9 @@ impl Message {
     }
     fn read_question_record(idx: &mut usize, data: &[u8]) -> Result<QuestionRecord, DecodeError> {
         let mut idx = idx;
-        let name = match Message::read_label(idx, data) {
+        let name = match Message::read_name(&mut idx, data) {
             Ok(v) => v,
-            Err(e) => return Err(e),
+            Err(e)  => return Err(e),
         };
         let record_type = match Message::read_u16(&mut idx, data) {
             1  => ResourceType::A,
@@ -129,22 +143,9 @@ impl Message {
     }
     fn read_resource_record(idx: &mut usize, data: &[u8]) -> Result<Resource, DecodeError> {
         let mut idx = idx;
-        let name = if data[*idx] & 0xc0 == 0xc0 {
-            let msb = ((data[*idx] & 0x3f) as u16) << 8;
-            *idx = *idx + 1;
-            let lsb = data[*idx] as u16;
-            let mut pointer: usize = (msb | lsb) as usize;
-            let res = match Message::read_label(&mut pointer, data) {
-                Ok(v) => v,
-                Err(e) => return Err(e),
-            };
-            *idx = *idx + 1;
-            res
-        } else {
-            match Message::read_label(&mut idx, data) {
-                Ok(v) => v,
-                Err(e) => return Err(e),
-            }
+        let name = match Message::read_name(&mut idx, data) {
+            Ok(v) => v,
+            Err(e)  => return Err(e),
         };
         let record_type = match Message::read_u16(&mut idx, data) {
             1  => ResourceType::A,
@@ -172,7 +173,10 @@ impl Message {
             ResourceType::CNAME => {
                 let mut idx = idx;
                 let name = if data[*idx] & 0xc0 == 0xc0 {
-                        let mut pointer: usize = (data[*idx] & 0x3f) as usize;
+                        let msb = ((data[*idx] & 0x3f) as u16) << 8;
+                        *idx = *idx + 1;
+                        let lsb = data[*idx] as u16;
+                        let mut pointer: usize = (msb | lsb) as usize;
                         let res = match Message::read_label(&mut pointer, data) {
                             Ok(v) => v,
                             Err(e) => return Err(e),
