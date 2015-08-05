@@ -95,7 +95,7 @@ impl Message {
             split.push(part);
         }
         *idx = *idx + 1;
-        let name = split.connect(&".");
+        let name = split.join(&".");
         Ok(name)
     }
     fn read_question_record(idx: &mut usize, data: &[u8]) -> Result<QuestionRecord, DecodeError> {
@@ -163,7 +163,7 @@ impl Message {
             _  => return Err(DecodeError::InvalidFormatErr("Unknown or Not Supported Resource Class"))
         };
         let ttl = Message::read_u32(&mut idx, data);
-        let rdlength = Message::read_u16(&mut idx, data);
+        let _ = Message::read_u16(&mut idx, data); // TODO use length
         let rdata = match record_type {
             ResourceType::A => {
                 let mut idx = idx;
@@ -219,7 +219,6 @@ pub enum DecodeError {
 
 impl<'a> Message {
     pub fn decode(data: &'a [u8]) -> Result<Message, DecodeError> {
-        let orig = data.clone();
         let mut idx = 0;
         let id = Message::read_u16(&mut idx, data);
         let flag_msb = Message::read_u8(&mut idx, data);
@@ -348,7 +347,7 @@ impl Encodable for Flag {
         if self.recursion_desired {
             msb = msb | 0b00000001;
         }
-        let mut lsb = 0u8;
+        let lsb = 0u8;
         match encoder.emit_u8(msb) {
             Err(s) => return Err(s),
             _ => {},

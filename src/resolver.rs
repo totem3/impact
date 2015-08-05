@@ -1,6 +1,6 @@
 use std::net::{SocketAddrV4, UdpSocket, Ipv4Addr};
-use message::{Message, QuestionRecord, DecodeError, Operation};
-use resource::{ResourceType, ResourceClass};
+use message::{Message, DecodeError, Operation};
+use resource::ResourceType;
 use std::fs::File;
 use std::io::Read;
 use std::str::FromStr;
@@ -19,9 +19,7 @@ impl Resolver {
     }
     pub fn from_reolv_conf() -> Resolver {
         let ns = Resolver::parse_resolv_conf();
-        Resolver {
-            name_servers: ns,
-        }
+        Resolver::new(ns)
     }
     fn parse_resolv_conf() -> Vec<Ipv4Addr> {
         let mut file = match File::open("/etc/resolv.conf") {
@@ -78,7 +76,7 @@ impl Resolver {
             let res = socket.recv_from(&mut buf);
             let (len, _) = res.unwrap();
 
-            let mut response: &[u8] = &buf[0..len];
+            let response: &[u8] = &buf[0..len];
             return match Message::decode(response) {
                 Ok(v) => Ok(v),
                 Err(DecodeError::InvalidFormatErr(s)) => Err(String::from(s)),
