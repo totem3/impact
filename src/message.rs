@@ -203,6 +203,7 @@ impl Message {
             _ => panic!("not supprted"),
         };
         let resource = Resource {
+            name: name,
             rtype: record_type,
             rclass: record_class,
             ttl: ttl,
@@ -511,11 +512,12 @@ mod test {
         ];
         let decoded = Message::decode(&mut encoded);
         let question_record = QuestionRecord {
-            domain_name: String::from("google.com"),
+            domain_name: "google.com".to_string(),
             query_type: ResourceType::A,
             query_class: ResourceClass::IN,
         };
         let resource_record = Resource {
+            name: "google.com".to_string(),
             rtype: ResourceType::A,
             rclass: ResourceClass::IN,
             ttl: 99,

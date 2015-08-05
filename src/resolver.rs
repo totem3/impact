@@ -101,6 +101,7 @@ mod tests {
         let ns = Resolver::parse_resolv_conf();
         let resolver = Resolver::new(ns);
         let expected = Resource {
+            name: "localhost".to_string(),
             rtype: ResourceType::A,
             rclass: ResourceClass::IN,
             ttl: 600,
