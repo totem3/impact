@@ -39,11 +39,27 @@ fn main() {
             for q in message.question_record {
                 println!("{}	{:?}	{:?}", q.domain_name, q.query_class, q.query_type);
             };
-            println!("");
-            println!("Answer: ");
-            for ans in message.answer_record {
-                println!("{}	{}	{:?}	{:?}	{}", ans.name, ans.ttl, ans.rclass, ans.rtype, ans.rdata);
-            };
+            if message.answer_pr_count > 0 {
+                println!("");
+                println!("Answer: ");
+                for ans in message.answer_record {
+                    println!("{}	{}	{:?}	{:?}	{}", ans.name, ans.ttl, ans.rclass, ans.rtype, ans.rdata);
+                };
+                println!("");
+            }
+            if message.authorative_pr_count > 0 {
+                println!("Authority: ");
+                for ans in message.authorative_record {
+                    println!("{}	{}	{:?}	{:?}	{}", ans.name, ans.ttl, ans.rclass, ans.rtype, ans.rdata);
+                };
+                println!("");
+            }
+            if message.additional_pr_count > 0 {
+                println!("Additional: ");
+                for ans in message.additional_record {
+                    println!("{}	{}	{:?}	{:?}	{}", ans.name, ans.ttl, ans.rclass, ans.rtype, ans.rdata);
+                };
+            }
         },
         Err(e) => {
             println!("failed to resolve: {}", e);
