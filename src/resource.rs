@@ -1,13 +1,11 @@
 use std::net::{Ipv4Addr, Ipv6Addr};
-use std::str;
-use std::fmt::{Display, Formatter, Error};
 
 #[derive(Debug,PartialEq)]
 pub struct Resource {
-    rtype: ResourceType,
-    rclass: ResourceClass,
-    ttl: u32,
-    rdata: RData,
+    pub rtype: ResourceType,
+    pub rclass: ResourceClass,
+    pub ttl: u32,
+    pub rdata: RData,
 }
 
 #[derive(Debug,PartialEq)]
@@ -18,7 +16,7 @@ pub enum RData {
     AAAA(Ipv6Addr)
 }
 
-#[derive(Clone,Debug,PartialEq)]
+#[derive(Copy,Clone,Debug,PartialEq)]
 pub enum ResourceType {
     A     = 1,
     NS    = 2,

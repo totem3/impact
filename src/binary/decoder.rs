@@ -10,6 +10,7 @@ pub trait Decodable {
 
 pub type DecodeResult<T> = Result<T, String>;
 
+#[allow(dead_code)]
 impl<'a> Decoder<'a> {
     pub fn new(iter: &'a mut Iter<'a, u8>) -> Decoder {
         Decoder{
@@ -72,7 +73,7 @@ impl<'a> Decoder<'a> {
 
 #[cfg(test)]
 mod test {
-    use super::{Decoder, Decodable, DecodeResult};
+    use super::{Decoder};
 
     #[test]
     fn test_decode_u() {

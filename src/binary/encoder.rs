@@ -53,8 +53,8 @@ impl<'a> Encoder<'a> {
 
     pub fn emit_vec<T: Encodable>(&mut self, vs: &Vec<T>) -> EncodeResult<()> {
         for v in vs {
-            v.encode(self);
-        }
+            let _ = v.encode(self);
+        };
         Ok(())
     }
 }
@@ -79,7 +79,7 @@ mod test {
     fn test_write_u8() {
         let mut buf = Vec::new();
         let mut encoder = Encoder::new(&mut buf);
-        let result = encoder.emit_u8(170u8);
+        let _ = encoder.emit_u8(170u8);
         let result = encoder.emit_u8(140u8);
         assert_eq!(result, Ok(()));
         assert_eq!(encoder.buffer, &vec![170u8, 140u8]);
