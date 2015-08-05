@@ -43,6 +43,23 @@ pub enum ResourceType {
     AAAA  = 38,
 }
 
+impl ResourceType {
+    pub fn from_string(v: String) -> Option<ResourceType> {
+        match v.as_ref() {
+            "A"     => Some(ResourceType::A),
+            "NS"    => Some(ResourceType::NS),
+            "CNAME" => Some(ResourceType::CNAME),
+            "SOA"   => Some(ResourceType::SOA),
+            "WKS"   => Some(ResourceType::WKS),
+            "PTR"   => Some(ResourceType::PTR),
+            "MX"    => Some(ResourceType::MX),
+            "SRV"   => Some(ResourceType::SRV),
+            "AAAA"  => Some(ResourceType::AAAA),
+            _       => None,
+        }
+    }
+}
+
 
 #[derive(Clone,Debug,PartialEq)]
 pub enum ResourceClass {

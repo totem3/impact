@@ -200,7 +200,7 @@ impl Message {
                     Message::read_u16(&mut idx, data),
                 ))
             },
-            _ => panic!("not supprted"),
+            ty => panic!(format!("not supprted type {:?}", ty)),
         };
         let resource = Resource {
             name: name,

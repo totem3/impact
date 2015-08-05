@@ -15,15 +15,24 @@ fn usage() {
 }
 
 fn main() {
-    let args: Vec<String> = env::args().collect();
-    if args.len() < 2 {
+    let mut args = env::args();
+    args.next();
+    if args.len() < 1 {
         usage();
         exit(0);
     }
 
-    let name = args[1].clone();
+    let name = args.next().unwrap();
+    let rtype = match args.next() {
+        Some(v) => match ResourceType::from_string(v) {
+            Some(t) => t,
+            None => ResourceType::A,
+        },
+        None => ResourceType::A,
+    };
+
     let resolver = Resolver::from_reolv_conf();
-    let response = resolver.resolve(name, ResourceType::A);
+    let response = resolver.resolve(name, rtype);
     match response {
         Ok(message) => {
             println!("Question: ");
