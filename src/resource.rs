@@ -108,8 +108,8 @@ pub enum ResourceType {
     WKS   = 11,
     PTR   = 12,
     MX    = 15,
+    AAAA  = 28,
     SRV   = 33,
-    AAAA  = 38,
 }
 
 impl ResourceType {

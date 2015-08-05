@@ -135,8 +135,8 @@ impl Message {
             11 => ResourceType::WKS,
             12 => ResourceType::PTR,
             15 => ResourceType::MX,
+            28 => ResourceType::AAAA,
             33 => ResourceType::SRV,
-            38 => ResourceType::AAAA,
             _  => return Err(DecodeError::InvalidFormatErr("Unknown or Not Supported Resource Type")),
         };
         let record_class = match Message::read_u16(&mut idx, data) {
@@ -164,8 +164,8 @@ impl Message {
             11 => ResourceType::WKS,
             12 => ResourceType::PTR,
             15 => ResourceType::MX,
+            28 => ResourceType::AAAA,
             33 => ResourceType::SRV,
-            38 => ResourceType::AAAA,
             _  => return Err(DecodeError::InvalidFormatErr("Unknown or Not Supported Resource Type")),
         };
         let record_class = match Message::read_u16(&mut idx, data) {
