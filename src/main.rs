@@ -33,7 +33,7 @@ fn main() {
             println!("");
             println!("Answer: ");
             for ans in message.answer_record {
-                println!("{}	{:?}	{:?}	{}", ans.name, ans.rclass, ans.rtype, ans.rdata);
+                println!("{}	{}	{:?}	{:?}	{}", ans.name, ans.ttl, ans.rclass, ans.rtype, ans.rdata);
             };
         },
         Err(e) => {
