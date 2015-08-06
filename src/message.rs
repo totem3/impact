@@ -2,6 +2,7 @@ use resource::{Resource, ResourceType, ResourceClass, RData, SOAData, MXData};
 use binary::encoder::{Encoder, EncodeResult, Encodable};
 use std::char;
 use std::net::{Ipv4Addr, Ipv6Addr};
+use num::FromPrimitive;
 
 #[derive(Debug,PartialEq)]
 pub struct Message {
@@ -79,6 +80,14 @@ impl Message {
         *idx = *idx + 1;
         a | b | c | d
     }
+    fn read_resource_type(idx: &mut usize, data: &[u8]) -> Result<ResourceType, DecodeError> {
+        let mut idx = idx;
+        let n = Message::read_u16(&mut idx, data);
+        match ResourceType::from_u16(n) {
+            Some(v) => Ok(v),
+            None    => Err(DecodeError::InvalidFormatErr("Invalid ResourceType".to_string())),
+        }
+    }
     fn read_name(idx: &mut usize, data: &[u8]) -> Result<String, DecodeError> {
         if data[*idx] & 0xc0 == 0xc0 {
             let msb = ((data[*idx] & 0x3f) as u16) << 8;
@@ -103,7 +112,7 @@ impl Message {
             for _ in 0..len {
                 match char::from_u32(data[*idx] as u32) {
                     Some(c) => part.push(c),
-                    None    => return Err(DecodeError::InvalidFormatErr("Invalid Name")),
+                    None    => return Err(DecodeError::InvalidFormatErr("Invalid Name".to_string())),
                 }
                 *idx = *idx + 1;
             }
@@ -127,21 +136,13 @@ impl Message {
             Ok(v) => v,
             Err(e)  => return Err(e),
         };
-        let record_type = match Message::read_u16(&mut idx, data) {
-            1  => ResourceType::A,
-            2  => ResourceType::NS,
-            5  => ResourceType::CNAME,
-            6  => ResourceType::SOA,
-            11 => ResourceType::WKS,
-            12 => ResourceType::PTR,
-            15 => ResourceType::MX,
-            28 => ResourceType::AAAA,
-            33 => ResourceType::SRV,
-            _  => return Err(DecodeError::InvalidFormatErr("Unknown or Not Supported Resource Type")),
+        let record_type = match Message::read_resource_type(&mut idx, data) {
+            Ok(v) => v,
+            Err(e) => return Err(e),
         };
         let record_class = match Message::read_u16(&mut idx, data) {
             1 => ResourceClass::IN,
-            _  => return Err(DecodeError::InvalidFormatErr("Unknown or Not Supported Resource Class"))
+            _  => return Err(DecodeError::InvalidFormatErr("Unknown or Not Supported Resource Class".to_string()))
         };
         let record = QuestionRecord{
             domain_name: name,
@@ -156,21 +157,13 @@ impl Message {
             Ok(v) => v,
             Err(e)  => return Err(e),
         };
-        let record_type = match Message::read_u16(&mut idx, data) {
-            1  => ResourceType::A,
-            2  => ResourceType::NS,
-            5  => ResourceType::CNAME,
-            6  => ResourceType::SOA,
-            11 => ResourceType::WKS,
-            12 => ResourceType::PTR,
-            15 => ResourceType::MX,
-            28 => ResourceType::AAAA,
-            33 => ResourceType::SRV,
-            _  => return Err(DecodeError::InvalidFormatErr("Unknown or Not Supported Resource Type")),
+        let record_type = match Message::read_resource_type(&mut idx, data) {
+            Ok(v) => v,
+            Err(e) => return Err(e),
         };
         let record_class = match Message::read_u16(&mut idx, data) {
             1 => ResourceClass::IN,
-            _  => return Err(DecodeError::InvalidFormatErr("Unknown or Not Supported Resource Class"))
+            _  => return Err(DecodeError::InvalidFormatErr("Unknown or Not Supported Resource Class".to_string()))
         };
         let ttl = Message::read_u32(&mut idx, data);
         let _ = Message::read_u16(&mut idx, data); // TODO use length
@@ -261,7 +254,7 @@ impl Message {
 }
 
 pub enum DecodeError {
-    InvalidFormatErr(&'static str),
+    InvalidFormatErr(String),
 }
 
 impl<'a> Message {
@@ -280,7 +273,7 @@ impl<'a> Message {
             2 => Operation::ServerStatusRequest,
             n => {
                 println!("Operation: {:?}", n);
-                return Err(DecodeError::InvalidFormatErr("Unknown Operation"));
+                return Err(DecodeError::InvalidFormatErr("Unknown Operation".to_string()));
             },
         };
         let aa = flag_msb & 0x04 == 0x04;
@@ -295,7 +288,7 @@ impl<'a> Message {
              3 => ResponseCode::NameError,
              4 => ResponseCode::NotImplementedError,
              5 => ResponseCode::RequestDenied,
-             _ => return Err(DecodeError::InvalidFormatErr("Unknown Response Code")),
+             _ => return Err(DecodeError::InvalidFormatErr("Unknown Response Code".to_string())),
         };
         let flag = Flag {
             query_or_response: qr,

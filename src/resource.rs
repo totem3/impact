@@ -1,3 +1,5 @@
+use num::traits::FromPrimitive;
+
 use std::net::{Ipv4Addr, Ipv6Addr};
 use std::fmt;
 use std::fmt::{Display, Formatter};
@@ -110,6 +112,26 @@ pub enum ResourceType {
     MX    = 15,
     AAAA  = 28,
     SRV   = 33,
+}
+
+impl FromPrimitive for ResourceType {
+    fn from_i64(n: i64) -> Option<Self> {
+        match n {
+            1  => Some(ResourceType::A),
+            2  => Some(ResourceType::NS),
+            5  => Some(ResourceType::CNAME),
+            6  => Some(ResourceType::SOA),
+            11 => Some(ResourceType::WKS),
+            12 => Some(ResourceType::PTR),
+            15 => Some(ResourceType::MX),
+            28 => Some(ResourceType::AAAA),
+            33 => Some(ResourceType::SRV),
+            _  => None,
+        }
+    }
+    fn from_u64(n: u64) -> Option<Self> {
+        ResourceType::from_i64(n as i64)
+    }
 }
 
 impl ResourceType {

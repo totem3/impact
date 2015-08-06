@@ -1,5 +1,6 @@
 #![feature(convert)]
 extern crate regex;
+extern crate num;
 mod message;
 mod resolver;
 mod resource;
@@ -39,8 +40,8 @@ fn main() {
             for q in message.question_record {
                 println!("{}	{:?}	{:?}", q.domain_name, q.query_class, q.query_type);
             };
+            println!("");
             if message.answer_pr_count > 0 {
-                println!("");
                 println!("Answer: ");
                 for ans in message.answer_record {
                     println!("{}	{}	{:?}	{:?}	{}", ans.name, ans.ttl, ans.rclass, ans.rtype, ans.rdata);
